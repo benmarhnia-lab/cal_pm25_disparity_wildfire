@@ -486,14 +486,14 @@ nonwild.wtavg$year <- as.numeric(nonwild.wtavg$year)
 legend_colors_ses <- c("Unemployment"="#A6CEE3", "Poverty"="#1F78B4", "Low Income"="#B2DF8A", "Low College Educational Attainment"="#33A02C", "Low High School Enrollment"="#FB9A99")
 legend_colors_race <- c("White"="#1B9E77", "Black"="#D95F02", "Asian"="#7570B3", "Hispanic"="#E7298A", "Native American"="#66A61E", "Pacific Islander"="#E6AB02")
 
-## Figure 3
+## combined ses figure
 p1 <- ggplot(total.wtavg, aes(x=year)) +
-  geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=2) +
-  geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=2) +
-  geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=2) +
-  geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=2) +
-  geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=2) +
-  geom_hline(yintercept=0, linewidth=1.5) +
+  geom_hline(yintercept=0, linewidth=1) +
+  geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=1.5) +
+  geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=1.5) +
+  geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=1.5) +
+  geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=1.5) +
+  geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=1.5) +
   xlab("") +
   ylab(expression(atop("Absolute difference in average", "total PM"[2.5]~"("~mu*"g/"*m^3~")"))) +
   labs(color="") +
@@ -506,12 +506,12 @@ p1 <- ggplot(total.wtavg, aes(x=year)) +
         axis.text.x = element_text(angle = 45, hjust=1))
 
 p2 <- ggplot(wild.wtavg, aes(x=year)) +
-  geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=2) +
-  geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=2) +
-  geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=2) +
-  geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=2) +
-  geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=2) +
-  geom_hline(yintercept=0, linewidth=1.5) +
+  geom_hline(yintercept=0, linewidth=1) + 
+  geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=1.5) +
+  geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=1.5) +
+  geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=1.5) +
+  geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=1.5) +
+  geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=1.5) +
   xlab("") +
   ylab(expression(atop("Absolute difference in average","WF PM"[2.5]~"("~mu*"g/"*m^3~")"))) +
   labs(color="") +
@@ -524,12 +524,12 @@ p2 <- ggplot(wild.wtavg, aes(x=year)) +
         axis.text.x = element_text(angle = 45, hjust=1))
 
 p3 <- ggplot(nonwild.wtavg, aes(x=year)) +
-  geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=2) +
-  geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=2) +
-  geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=2) +
-  geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=2) +
-  geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=2) +
-  geom_hline(yintercept=0, linewidth=1.5) +
+  geom_hline(yintercept=0, linewidth=1) + 
+  geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=1.5) +
+  geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=1.5) +
+  geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=1.5) +
+  geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=1.5) +
+  geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=1.5) +
   xlab("") +
   ylab(expression(atop("Absolute difference in average", "NWF PM"[2.5]~"("~mu*"g/"*m^3~")"))) +
   labs(color="") +
@@ -543,11 +543,11 @@ p3 <- ggplot(nonwild.wtavg, aes(x=year)) +
 
 legend_p3 <- get_legend(
   ggplot(nonwild.wtavg, aes(x=year)) +
-    geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=2) +
-    geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=2) +
-    geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=2) +
-    geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=2) +
-    geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=2) +
+    geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=1.5) +
+    geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=1.5) +
+    geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=1.5) +
+    geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=1.5) +
+    geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=1.5) +
     scale_color_manual(values=legend_colors_ses) +
     scale_x_continuous(breaks=seq(2006, 2018, 1)) +
     labs(color="") +
@@ -558,7 +558,7 @@ legend_p3 <- get_legend(
           axis.text.x = element_text(angle = 45, hjust=1))
 )
 
-png(filename = file.path(indir1, "results", "ct_030724", "figures/combined_wtavg_ses.png"),
+png(filename = file.path(indir1, "figures/combined_wtavg_ses.png"),
     width=8, height=8, units="in", res = 600, bg="white",
     pointsize=12, family="sans")
 p_up <- plot_grid(p1, p3, labels="AUTO", nrow = 1)
@@ -566,15 +566,15 @@ p_bottom <- plot_grid(p2, legend_p3, labels=c("C", ""), nrow = 1, rel_widths = c
 plot_grid(p_up, p_bottom, nrow=2)
 dev.off()
 
-## Figure 4
+## combined race/ethnicity figure
 p4 <- ggplot(total.wtavg, aes(x=year)) +
-  geom_line(aes(y=white_pct_dif, color="White"), linewidth=2) +
-  geom_line(aes(y=black_pct_dif, color="Black"), linewidth=2) +
-  geom_line(aes(y=asian_pct_dif, color="Asian"), linewidth=2) +
-  geom_line(aes(y=latino_pct_dif, color="Hispanic"), linewidth=2) +
-  geom_line(aes(y=nativeAm_pct_dif, color="Native American"), linewidth=2) +
-  geom_line(aes(y=PacificIsl_pct_dif, color="Pacific Islander"), linewidth=2) +
-  geom_hline(yintercept=0, linewidth=1.5) +
+  geom_hline(yintercept=0, linewidth=1) +
+  geom_line(aes(y=white_pct_dif, color="White"), linewidth=1.5) +
+  geom_line(aes(y=black_pct_dif, color="Black"), linewidth=1.5) +
+  geom_line(aes(y=asian_pct_dif, color="Asian"), linewidth=1.5) +
+  geom_line(aes(y=latino_pct_dif, color="Hispanic"), linewidth=1.5) +
+  geom_line(aes(y=nativeAm_pct_dif, color="Native American"), linewidth=1.5) +
+  geom_line(aes(y=PacificIsl_pct_dif, color="Pacific Islander"), linewidth=1.5) +
   xlab("") +
   ylab(expression(atop("Absolute difference in average", "total PM"[2.5]~"("~mu*"g/"*m^3~")"))) +
   labs(color="") +
@@ -587,13 +587,13 @@ p4 <- ggplot(total.wtavg, aes(x=year)) +
         axis.text.x = element_text(angle = 45, hjust=1))
 
 p5 <- ggplot(wild.wtavg, aes(x=year)) +
-  geom_line(aes(y=white_pct_dif, color="White"), linewidth=2) +
-  geom_line(aes(y=black_pct_dif, color="Black"), linewidth=2) +
-  geom_line(aes(y=asian_pct_dif, color="Asian"), linewidth=2) +
-  geom_line(aes(y=latino_pct_dif, color="Hispanic"), linewidth=2) +
-  geom_line(aes(y=nativeAm_pct_dif, color="Native American"), linewidth=2) +
-  geom_line(aes(y=PacificIsl_pct_dif, color="Pacific Islander"), linewidth=2) +
-  geom_hline(yintercept=0, linewidth=1.5) +
+  geom_hline(yintercept=0, linewidth=1) +
+  geom_line(aes(y=white_pct_dif, color="White"), linewidth=1.5) +
+  geom_line(aes(y=black_pct_dif, color="Black"), linewidth=1.5) +
+  geom_line(aes(y=asian_pct_dif, color="Asian"), linewidth=1.5) +
+  geom_line(aes(y=latino_pct_dif, color="Hispanic"), linewidth=1.5) +
+  geom_line(aes(y=nativeAm_pct_dif, color="Native American"), linewidth=1.5) +
+  geom_line(aes(y=PacificIsl_pct_dif, color="Pacific Islander"), linewidth=1.5) +
   xlab("") +
   ylab(expression(atop("Absolute difference in average","WF PM"[2.5]~"("~mu*"g/"*m^3~")"))) +
   labs(color="") +
@@ -606,13 +606,13 @@ p5 <- ggplot(wild.wtavg, aes(x=year)) +
         axis.text.x = element_text(angle = 45, hjust=1))
 
 p6 <- ggplot(nonwild.wtavg, aes(x=year)) +
-  geom_line(aes(y=white_pct_dif, color="White"), linewidth=2) +
-  geom_line(aes(y=black_pct_dif, color="Black"), linewidth=2) +
-  geom_line(aes(y=asian_pct_dif, color="Asian"), linewidth=2) +
-  geom_line(aes(y=latino_pct_dif, color="Hispanic"), linewidth=2) +
-  geom_line(aes(y=nativeAm_pct_dif, color="Native American"), linewidth=2) +
-  geom_line(aes(y=PacificIsl_pct_dif, color="Pacific Islander"), linewidth=2) +
-  geom_hline(yintercept=0, linewidth=1.5) +
+  geom_hline(yintercept=0, linewidth=1) +
+  geom_line(aes(y=white_pct_dif, color="White"), linewidth=1.5) +
+  geom_line(aes(y=black_pct_dif, color="Black"), linewidth=1.5) +
+  geom_line(aes(y=asian_pct_dif, color="Asian"), linewidth=1.5) +
+  geom_line(aes(y=latino_pct_dif, color="Hispanic"), linewidth=1.5) +
+  geom_line(aes(y=nativeAm_pct_dif, color="Native American"), linewidth=1.5) +
+  geom_line(aes(y=PacificIsl_pct_dif, color="Pacific Islander"), linewidth=1.5) +
   xlab("") +
   ylab(expression(atop("Absolute difference in average", "NWF PM"[2.5]~"("~mu*"g/"*m^3~")"))) +
   labs(color="") +
@@ -626,12 +626,12 @@ p6 <- ggplot(nonwild.wtavg, aes(x=year)) +
 
 legend_p6 <- get_legend(
   ggplot(nonwild.wtavg, aes(x=year)) +
-    geom_line(aes(y=white_pct_dif, color="White"), linewidth=2) +
-    geom_line(aes(y=black_pct_dif, color="Black"), linewidth=2) +
-    geom_line(aes(y=asian_pct_dif, color="Asian"), linewidth=2) +
-    geom_line(aes(y=latino_pct_dif, color="Hispanic"), linewidth=2) +
-    geom_line(aes(y=nativeAm_pct_dif, color="Native American"), linewidth=2) +
-    geom_line(aes(y=PacificIsl_pct_dif, color="Pacific Islander"), linewidth=2) +
+    geom_line(aes(y=white_pct_dif, color="White"), linewidth=1.5) +
+    geom_line(aes(y=black_pct_dif, color="Black"), linewidth=1.5) +
+    geom_line(aes(y=asian_pct_dif, color="Asian"), linewidth=1.5) +
+    geom_line(aes(y=latino_pct_dif, color="Hispanic"), linewidth=1.5) +
+    geom_line(aes(y=nativeAm_pct_dif, color="Native American"), linewidth=1.5) +
+    geom_line(aes(y=PacificIsl_pct_dif, color="Pacific Islander"), linewidth=1.5) +
     scale_color_manual(values=legend_colors_race) +
     scale_x_continuous(breaks=seq(2006, 2018, 1)) +
     labs(color="") +
@@ -642,7 +642,8 @@ legend_p6 <- get_legend(
           axis.text.x = element_text(angle = 45, hjust=1))
 )
 
-png(filename = file.path(indir1, "results", "ct_030724", "figures/combined_wtavg_race.png"),
+
+png(filename = file.path(indir1, "figures/combined_wtavg_race.png"),
     width=8, height=8, units="in", res = 600, bg="white",
     pointsize=12, family="sans")
 p_uprace <- plot_grid(p4, p6, labels="AUTO", nrow = 1)
