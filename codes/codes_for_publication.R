@@ -2,7 +2,7 @@
 ### smoke to ambient PM2.5 exposure disparity in California (2006 to 2018)" project
 ### written and prepared by Chen Chen and Jenny Nguyen
 library(data.table)
-library(rgdal)
+library(sf)
 library(magick)
 library(cowplot)
 library(ggplot2)
@@ -19,6 +19,7 @@ pop_vbs <- c("pop25_64", "pop_total", "pop25_up", "pop15_17",
              "pop_total", "pop_total", "pop_total", "pop_total", "pop_total", "pop_total",
              "pop_total"
 )
+names(pop_vbs) <- hpi_vbs
 
 ### data read in
 #######
@@ -30,9 +31,9 @@ hpi_com$CensusTract <- paste0("0", hpi_com$CensusTract)
 #######
 
 ### Analysis
-## Rank-rank correlations and Figure 2 and eFigure 2
+## Rank-rank correlations and Figure 2, eFigure 3 and eTable 1
 #######
-rank.plot.f2 <- function(y1, y2, input, exposure, nm) { ## plot with aggregation
+rank.plot.process <- function(y1, y2, input, exposure) { ## plot with aggregation
   ## transformation of data to long format
   data <- merge(input[year==y1, c("year", "GEOID", exposure), with=FALSE], input[year==y2, c("GEOID", exposure), with=FALSE], by="GEOID")
   data <- as.data.frame(data)
@@ -43,77 +44,150 @@ rank.plot.f2 <- function(y1, y2, input, exposure, nm) { ## plot with aggregation
   data$rp_new_avg <- sapply(1:nrow(data), function(a) {
     mean(data[data$rp==data$rp[a], "rp_new"])
   })
-  plot(data$rp, data$rp_new_avg, pch=19,
-       main=paste(nm, "correlation is",
-                  round(cor(data[, paste0("pm_", y1)], data[, paste0("pm_", y2)], 
-                            method = "spearman")*100, digits = 1), "%"),
-       xlab=paste("Rank percentile in", y1), ylab=paste("Mean rank percentile in", y2), xlim=c(0,100), ylim=c(0, 100), cex.main=2, cex.lab=1.5)
-  abline(0, 1, lwd=2, col="red")
+  return(data)
 }
 
 
-png(file.path(indir1, "figures", paste0("rank_rank_Average_total_pm25.png")),
-    width=6,height=4,units="in", res = 600, bg="transparent",
-    pointsize=12, family="sans")
-rank.plot.f2(2006, 2018, pm.all.com, "pm25_avg", "Total PM")
+## eFigure 3
+data <- rank.plot.process(2006, 2018, pm.all.com, "pm25_avg")
+p1 <- ggplot(data, aes(x=rp, y = rp_new_avg)) +
+  geom_point(size= 1) +
+  xlim(0, 100) +
+  ylim(0, 100) +
+  geom_abline(intercept = 0, slope = 1, linewidth = 0.7, col="red") + 
+  labs(title=paste("Total PM", "correlation is",
+                   round(cor(data[, paste0("pm_", 2006)], data[, paste0("pm_", 2018)], 
+                             method = "spearman")*100, digits = 1), "%"), 
+       x=paste("Rank percentile in", 2006),
+       y=paste("Mean rank percentile in", 2018)) +
+  theme_bw() + 
+  theme(text = element_text(size=8), plot.title = element_text(hjust = 0.5))
+
+data <- rank.plot.process(2006, 2018, pm.all.com, "pm25wf_avg")
+p2 <- ggplot(data, aes(x=rp, y = rp_new_avg)) +
+  geom_point(size= 1) +
+  xlim(0, 100) +
+  ylim(0, 100) +
+  geom_abline(intercept = 0, slope = 1, linewidth = 0.7, col="red") + 
+  labs(title=paste("WF PM", "correlation is",
+                   round(cor(data[, paste0("pm_", 2006)], data[, paste0("pm_", 2018)], 
+                             method = "spearman")*100, digits = 1), "%"), 
+       x=paste("Rank percentile in", 2006),
+       y=paste("Mean rank percentile in", 2018)) +
+  theme_bw() + 
+  theme(text = element_text(size=8), plot.title = element_text(hjust = 0.5))
+
+data <- rank.plot.process(2006, 2018, pm.all.com, "pm25_nowf")
+p3 <- ggplot(data, aes(x=rp, y = rp_new_avg)) +
+  geom_point(size= 1) +
+  xlim(0, 100) +
+  ylim(0, 100) +
+  geom_abline(intercept = 0, slope = 1, linewidth = 0.7, col="red") + 
+  labs(title=paste("NWF PM", "correlation is",
+                   round(cor(data[, paste0("pm_", 2006)], data[, paste0("pm_", 2018)], 
+                             method = "spearman")*100, digits = 1), "%"), 
+       x=paste("Rank percentile in", 2006),
+       y=paste("Mean rank percentile in", 2018)) +
+  theme_bw() + 
+  theme(text = element_text(size=8), plot.title = element_text(hjust = 0.5))
+
+tiff(file.path(indir1, "figures", paste0("efigure3_rank_rank_average_06to18.tiff")),
+     width=6,height=4,units="in", res = 500, bg="transparent",
+     pointsize=9, family="sans", compression = "zip")
+# png(file.path(indir1, "figures", paste0("efigure3_rank_rank_average_06to18.png")),
+#     width=6,height=4,units="in", res = 600, bg="transparent",
+#     pointsize=9, family="sans")
+plot_grid(p1, p3, p2, labels = "AUTO", nrow=2)
 dev.off()
 
-cat("Relationship between wildfire PM2.5 rank in 2006 and mean PM2.5 rank in 2018", "\n")
-png(file.path(indir1, "figures", paste0("rank_rank_Average_WF_pm25.png")),
-    width=6,height=4,units="in", res = 600, bg="transparent",
-    pointsize=12, family="sans")
-rank.plot.f2(2006, 2018, pm.all.com, "pm25wf_avg", "WF PM")
-dev.off()
 
-cat("Relationship between non-wf PM2.5 rank in 2006 and mean PM2.5 rank in 2018", "\n")
-png(file.path(indir1, "figures", paste0("rank_rank_Average_non_WF_pm25.png")),
-    width=6,height=4,units="in", res = 600, bg="transparent",
-    pointsize=12, family="sans")
-rank.plot.f2(2006, 2018, pm.all.com, "pm25_nowf", "NWF PM")
-dev.off()
 
 ## Figure 2
-p1 <- image_ggplot(image_read(file.path(indir1, "figures", "rank_rank_Average_total_pm25.png")))
-p2 <- image_ggplot(image_read(file.path(indir1, "figures", "rank_rank_Average_WF_pm25.png")))
-p3 <- image_ggplot(image_read(file.path(indir1, "figures", "rank_rank_Average_non_WF_pm25.png")))
-png(file.path(indir1, "figures", paste0("rank_rank_Average.png")),
-    width=6,height=4,units="in", res = 600, bg="transparent",
-    pointsize=12, family="sans")
+data <- rank.plot.process("06to08", "16to18", pm.all.com, "pm25_avg")
+p1 <- ggplot(data, aes(x=rp, y = rp_new_avg)) +
+  geom_point(size= 1) +
+  xlim(0, 100) +
+  ylim(0, 100) +
+  geom_abline(intercept = 0, slope = 1, linewidth = 0.7, col="red") + 
+  labs(title=paste("Total PM", "correlation is",
+                   round(cor(data[, paste0("pm_", "06to08")], data[, paste0("pm_", "16to18")], 
+                             method = "spearman")*100, digits = 1), "%"), 
+       x=paste("Rank percentile in", "average of 2006 to 2008"),
+       y=paste("Mean rank percentile in", "\naverage of 2016 to 2018")) +
+  theme_bw() + 
+  theme(text = element_text(size=8), plot.title = element_text(hjust = 0.5))
+
+data <- rank.plot.process("06to08", "16to18", pm.all.com, "pm25wf_avg")
+p2 <- ggplot(data, aes(x=rp, y = rp_new_avg)) +
+  geom_point(size= 1) +
+  xlim(0, 100) +
+  ylim(0, 100) +
+  geom_abline(intercept = 0, slope = 1, linewidth = 0.7, col="red") + 
+  labs(title=paste("WF PM", "correlation is",
+                   round(cor(data[, paste0("pm_", "06to08")], data[, paste0("pm_", "16to18")], 
+                             method = "spearman")*100, digits = 1), "%"), 
+       x=paste("Rank percentile in", "average of 2006 to 2008"),
+       y=paste("Mean rank percentile in", "\naverage of 2016 to 2018")) +
+  theme_bw() + 
+  theme(text = element_text(size=8), plot.title = element_text(hjust = 0.5))
+
+data <- rank.plot.process("06to08", "16to18", pm.all.com, "pm25_nowf")
+p3 <- ggplot(data, aes(x=rp, y = rp_new_avg)) +
+  geom_point(size= 1) +
+  xlim(0, 100) +
+  ylim(0, 100) +
+  geom_abline(intercept = 0, slope = 1, linewidth = 0.7, col="red") + 
+  labs(title=paste("NWF PM", "correlation is",
+                   round(cor(data[, paste0("pm_", "06to08")], data[, paste0("pm_", "16to18")], 
+                             method = "spearman")*100, digits = 1), "%"), 
+       x=paste("Rank percentile in", "average of 2006 to 2008"),
+       y=paste("Mean rank percentile in", "\naverage of 2016 to 2018")) +
+  theme_bw() + 
+  theme(text = element_text(size=8), plot.title = element_text(hjust = 0.5))
+
+tiff(file.path(indir1, "figures", paste0("figure2_rank_rank_3y_average_0608to1618.tiff")),
+     width=6,height=4,units="in", res = 500, bg="transparent",
+     pointsize=9, family="sans", compression = "zip")
+# png(file.path(indir1, "figures", paste0("figure2_rank_rank_3y_average_0608to1618.png")),
+#     width=6,height=4,units="in", res = 600, bg="transparent",
+#     pointsize=9, family="sans")
 plot_grid(p1, p3, p2, labels = "AUTO", nrow=2)
 dev.off()
 
 
-cat("Relationship between PM2.5 rank in 06to08 and mean PM2.5 rank in 16to18", "\n")
-png(file.path(indir1, "figures", paste0("rank_rank_3y_Average_total_pm25.png")),
-    width=6,height=4,units="in", res = 600, bg="transparent",
-    pointsize=12, family="sans")
-rank.plot.f2("06to08", "16to18", pm.all.com, "pm25_avg", "Total PM")
-dev.off()
 
-cat("Relationship between wildfire PM2.5 rank in 06to08 and mean PM2.5 rank in 16to18", "\n")
-png(file.path(indir1, "figures", paste0("rank_rank_3y_Average_WF_pm25.png")),
-    width=6,height=4,units="in", res = 600, bg="transparent",
-    pointsize=12, family="sans")
-rank.plot.f2("06to08", "16to18", pm.all.com, "pm25wf_avg", "WF PM")
-dev.off()
+## eTable 1
+rank.id <- function(y1, input, id, exposure, percentile, direction) { ## plot with aggregation
+  ## transformation of data to long format
+  data <- input[year==y1, c("year", id, exposure), with=FALSE]
+  data <- as.data.frame(data)
+  ## aggregated for each percentile
+  data$rp <- 100*rank(data[, exposure])/nrow(data)
+  if (direction=="lower") {
+    return(data[data$rp<=percentile, id])
+  } else if (direction=="higher") {
+    return(data[data$rp>=percentile, id])
+  }
+}
+foo1 <- data.frame(sesyears=rep(c("2006", "2018"), each=3), exyears=rep(c("06to08", "16to18"), each=3),
+                   exposure=rep(c("pm25_avg", "pm25_nowf","pm25wf_avg"), times=2))
+foo2 <- data.frame(sesyears=rep(c("2006", "2018"), each=3), exyears=rep(c("2006", "2018"), each=3),
+                   exposure=rep(c("pm25_avg", "pm25_nowf","pm25wf_avg"), times=2))
+foo <- rbind(foo1, foo2)
+bar <- cbind(foo[rep(seq_len(nrow(foo)), each=2), ], 
+             threshold=c(10, 90), relative=c("lower", "higher"))
 
-cat("Relationship between non-wf PM2.5 rank in 06to08 and mean PM2.5 rank in 16to18", "\n")
-png(file.path(indir1, "figures", paste0("rank_rank_3y_Average_non_WF_pm25.png")),
-    width=6,height=4,units="in", res = 600, bg="transparent",
-    pointsize=12, family="sans")
-rank.plot.f2("06to08", "16to18", pm.all.com, "pm25_nowf", "NWF PM")
-dev.off()
-
-## eFigure 2
-par(mfrow=c(1, 1))
-p1 <- image_ggplot(image_read(file.path(indir1, "figures", "rank_rank_3y_Average_total_pm25.png")))
-p2 <- image_ggplot(image_read(file.path(indir1, "figures", "rank_rank_3y_Average_WF_pm25.png")))
-p3 <- image_ggplot(image_read(file.path(indir1, "figures", "rank_rank_3y_Average_non_WF_pm25.png")))
-png(file.path(indir1, "figures", paste0("rank_rank_3y_Average.png")),
-    width=6,height=4,units="in", res = 600, bg="transparent",
-    pointsize=12, family="sans")
-plot_grid(p1, p3, p2, labels = "AUTO", nrow=2)
-dev.off()
+for (i in 1:nrow(bar)) {
+  ids <- rank.id(bar$exyears[i], pm.all.com, "GEOID", bar$exposure[i], 
+                 bar$threshold[i], bar$relative[i])
+  ids <- paste0("0", ids)
+  bar[i, paste0(hpi_vbs, "_mean")] <- sapply(paste(hpi_vbs, bar$sesyears[i], sep="."), 
+                                             function(a) {
+                                               round(mean(hpi_com[hpi_com$CensusTract %in% ids, ][[a]], na.rm=TRUE), digits=2)
+                                             })
+}
+cat("Distribution of indicators for communities least and most exposed", "\n")
+print(bar)
 #######
 
 ## Population weighted averages
@@ -254,39 +328,27 @@ write.csv(wt_summary, file.path(indir1, "results", "ct_indicator_nonwildfire_wta
 #######
 
 ### Figures
-## Figure 1 and eFigure 3
+## Figure 1 and eFigure 2
 #######
 ## county contour from the census tiger product
-county.sp <- readOGR(file.path(indir2, "contours", "tl_2010_us_county10",
-                               "tl_2010_us_county10.shp"), stringsAsFactors = FALSE)
+county.sp <- read_sf(file.path(indir2, "contours", "tl_2010_us_county10",
+                               "tl_2010_us_county10.shp"), stringsAsFactors = FALSE, as_tibble = FALSE)
 county.sp <- county.sp[county.sp$STATEFP10=="06", ]
-county.sp@data$id <- rownames(county.sp@data)
-county.dt <- fortify(county.sp, region = "id")
 
-ct.sp <- readOGR(file.path(indir2, "contours", "tl_2010_06_tract10",
-                           "tl_2010_06_tract10.shp"), stringsAsFactors = FALSE)
-
-## census tract contour from the census tiger product
-## transform the spatialpolygon to data.frame
-ct.sp@data$id <- rownames(ct.sp@data)
-ct.dt <- fortify(ct.sp, region = "id")
-bar <- merge(ct.dt, ct.sp@data[, c("GEOID10", "id")], by = "id")
-## merge exposure and plotting polygons
-foo <- merge(bar, hpi_com, by.x="GEOID10", by.y="CensusTract", all.x=TRUE)
-foo <- foo[order(foo$order), ]
+sp.dt <- merge(ct.sp, hpi_com, by.x="GEOID10", by.y="CensusTract", all.x=TRUE)
 
 years <- c("06to18", 2006, 2018, "06to17", 2017, "06to08", "16to18", "18minus06", "18minus06_3y", "17minus06")
 events <- c(paste0("pm25_avg.", years), paste0("pm25wf_avg.", years), paste0("pm25_nowf.", years))
-events.nm <- c(expression(atop("Average 2006-2018", "PM"[2.5]~"("*mu*"g/"*m^3*")          ")),
-               expression(atop("Average 2006", "PM"[2.5]~"("*mu*"g/"*m^3*")")),
-               expression(atop("Average 2018", "PM"[2.5]~"("*mu*"g/"*m^3*")")),
-               expression(atop("Average 2006-2017", "PM"[2.5]~"("*mu*"g/"*m^3*")          ")),
-               expression(atop("Average 2017", "PM"[2.5]~"("*mu*"g/"*m^3*")")),
-               expression(atop("Average 2006-2008", "PM"[2.5]~"("*mu*"g/"*m^3*")          ")),
-               expression(atop("Average 2016-2018", "PM"[2.5]~"("*mu*"g/"*m^3*")          ")),
-               expression(atop("Avg dif (2018-2006)", "PM"[2.5]~"("*mu*"g/"*m^3*")")),
-               expression(atop("Avg dif (3y_2018-2006)", "PM"[2.5]~"("*mu*"g/"*m^3*")")),
-               expression(atop("Avg dif (2017-2006)", "PM"[2.5]~"("*mu*"g/"*m^3*")")),
+events.nm <- c(expression(atop("Average 2006-2018", "total PM"[2.5]~"("*mu*"g/"*m^3*")          ")),
+               expression(atop("Average 2006", "total PM"[2.5]~"("*mu*"g/"*m^3*")")),
+               expression(atop("Average 2018", "total PM"[2.5]~"("*mu*"g/"*m^3*")")),
+               expression(atop("Average 2006-2017", "total PM"[2.5]~"("*mu*"g/"*m^3*")          ")),
+               expression(atop("Average 2017", "total PM"[2.5]~"("*mu*"g/"*m^3*")")),
+               expression(atop("Average 2006-2008", "total PM"[2.5]~"("*mu*"g/"*m^3*")          ")),
+               expression(atop("Average 2016-2018", "total PM"[2.5]~"("*mu*"g/"*m^3*")          ")),
+               expression(atop("Avg dif (2018-2006)", "total PM"[2.5]~"("*mu*"g/"*m^3*")")),
+               expression(atop("Avg dif (3y_2018-2006)", "total PM"[2.5]~"("*mu*"g/"*m^3*")")),
+               expression(atop("Avg dif (2017-2006)", "total PM"[2.5]~"("*mu*"g/"*m^3*")")),
                
                expression(atop("Average 2006-2018", "WF PM"[2.5]~"("*mu*"g/"*m^3*")     ")),
                expression(atop("Average 2006", "WF PM"[2.5]~"("*mu*"g/"*m^3*")")),
@@ -310,163 +372,231 @@ events.nm <- c(expression(atop("Average 2006-2018", "PM"[2.5]~"("*mu*"g/"*m^3*")
                expression(atop("Avg dif (3y_2018-2006)", "NWF PM"[2.5]~"("*mu*"g/"*m^3*")")),
                expression(atop("Avg dif (2017-2006)", "NWF PM"[2.5]~"("*mu*"g/"*m^3*")"))
 )
-for (i in 1:length(years)) {
-  
-  if (i %in% 8:10) {
-    p1 <- ggplot(foo, aes(long, lat)) +
-      geom_polygon(aes(group = group, fill = eval(as.name(events[i])))) +
-      coord_map() +
-      scale_fill_continuous_divergingx(palette = 'RdBu', na.value = "gray80", mid = 0, rev=TRUE) +
-      guides(fill = guide_colourbar(
-        barheight = unit(1 , "in" ),
-        title = events.nm[i])) +
-      labs(x="", y="") +
-      geom_path(data=county.dt, aes(long, lat, group=group), size=0.05, col="grey") + ## county contour
-      theme(text = element_text(size=16),
-            legend.background = element_blank(),
-            legend.box.background = element_blank(),
-            legend.position=c(.8,.8),
-            axis.ticks = element_blank(),
-            axis.text.x = element_blank(),
-            axis.text.y = element_blank(),
-            panel.background = element_rect(fill="transparent"),
-            panel.border = element_blank(),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank())
-    
-    p2 <- ggplot(foo, aes(long, lat)) +
-      geom_polygon(aes(group = group, fill = eval(as.name(events[i+10])))) +
-      coord_map() +
-      scale_fill_continuous_divergingx(palette = 'RdBu', na.value = "gray80", mid = 0, rev=TRUE) +
-      guides(fill = guide_colourbar(
-        barheight = unit(1 , "in" ),
-        title = events.nm[i+10])) +
-      labs(x="", y="") +
-      geom_path(data=county.dt, aes(long, lat, group=group), size=0.05, col="grey") + ## county contour
-      theme(text = element_text(size=16),
-            legend.background = element_blank(),
-            legend.box.background = element_blank(),
-            legend.position=c(.8,.8),
-            axis.ticks = element_blank(),
-            axis.text.x = element_blank(),
-            axis.text.y = element_blank(),
-            panel.background = element_rect(fill="transparent"),
-            panel.border = element_blank(),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank())
-    
-    p3 <- ggplot(foo, aes(long, lat)) +
-      geom_polygon(aes(group = group, fill = eval(as.name(events[i+20])))) +
-      coord_map() +
-      scale_fill_continuous_divergingx(palette = 'RdBu', na.value = "gray80", mid = 0, rev=TRUE) +
-      guides(fill = guide_colourbar(
-        barheight = unit(1 , "in" ),
-        title = events.nm[i+20])) +
-      labs(x="", y="") +
-      geom_path(data=county.dt, aes(long, lat, group=group), size=0.05, col="grey") + ## county contour
-      theme(text = element_text(size=16),
-            legend.background = element_blank(),
-            legend.box.background = element_blank(),
-            legend.position=c(.8,.8),
-            axis.ticks = element_blank(),
-            axis.text.x = element_blank(),
-            axis.text.y = element_blank(),
-            panel.background = element_rect(fill="transparent"),
-            panel.border = element_blank(),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank())
-  } else {
-    p1 <- ggplot(foo, aes(long, lat)) +
-      geom_polygon(aes(group = group, fill = eval(as.name(events[i])))) +
-      coord_map() +
-      scale_fill_distiller(palette = "YlOrRd", na.value = "gray80", direction = 1) +
-      guides(fill = guide_colourbar(
-        barheight = unit(1 , "in" ),
-        title = events.nm[i])) +
-      labs(x="", y="") +
-      geom_path(data=county.dt, aes(long, lat, group=group), size=0.05, col="grey") + ## county contour
-      theme(text = element_text(size=16),
-            legend.background = element_blank(),
-            legend.box.background = element_blank(),
-            legend.position=c(.8,.8),
-            axis.ticks = element_blank(),
-            axis.text.x = element_blank(),
-            axis.text.y = element_blank(),
-            panel.background = element_rect(fill="transparent"),
-            panel.border = element_blank(),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank())
-    
-    p2 <- ggplot(foo, aes(long, lat)) +
-      geom_polygon(aes(group = group, fill = eval(as.name(events[i+10])))) +
-      coord_map() +
-      scale_fill_distiller(palette = "YlOrRd", na.value = "gray80", direction = 1) +
-      guides(fill = guide_colourbar(
-        barheight = unit(1 , "in" ),
-        title = events.nm[i+10])) +
-      labs(x="", y="") +
-      geom_path(data=county.dt, aes(long, lat, group=group), size=0.05, col="grey") + ## county contour
-      theme(text = element_text(size=16),
-            legend.background = element_blank(),
-            legend.box.background = element_blank(),
-            legend.position=c(.8,.8),
-            axis.ticks = element_blank(),
-            axis.text.x = element_blank(),
-            axis.text.y = element_blank(),
-            panel.background = element_rect(fill="transparent"),
-            panel.border = element_blank(),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank())
-    
-    p3 <- ggplot(foo, aes(long, lat)) +
-      geom_polygon(aes(group = group, fill = eval(as.name(events[i+20])))) +
-      coord_map() +
-      scale_fill_distiller(palette = "YlOrRd", na.value = "gray80", direction = 1) +
-      guides(fill = guide_colourbar(
-        barheight = unit(1 , "in" ),
-        title = events.nm[i+20])) +
-      labs(x="", y="") +
-      geom_path(data=county.dt, aes(long, lat, group=group), size=0.05, col="grey") + ## county contour
-      theme(text = element_text(size=16),
-            legend.background = element_blank(),
-            legend.box.background = element_blank(),
-            legend.position=c(.8,.8),
-            axis.ticks = element_blank(),
-            axis.text.x = element_blank(),
-            axis.text.y = element_blank(),
-            panel.background = element_rect(fill="transparent"),
-            panel.border = element_blank(),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank())
-  }
-  
-  png(file.path(indir1, "figures", paste0("ct_complete_data_Average_pm25_", years[i],".png")),
-      width=5,height=5,units="in", res = 600, bg="transparent",
-      pointsize=12, family="sans")
-  print(p1)
-  dev.off()
-  
-  png(file.path(indir1, "figures", paste0("ct_complete_data_Average_wildfire_pm25_", years[i],".png")),
-      width=5,height=5,units="in", res = 600, bg="transparent", 
-      pointsize=12, family="sans")
-  print(p2)
-  dev.off()
-  
-  png(file.path(indir1, "figures", paste0("ct_complete_data_Average_non_wildfire_pm25_", years[i],".png")),
-      width=5,height=5,units="in", res = 600, bg="transparent", 
-      pointsize=12, family="sans")
-  print(p3)
-  dev.off()
-  
-  png(file.path(indir1, "figures", paste0("ct_complete_data_all_pm25_", years[i],".png")),
-      width=10,height=10,units="in", res = 600, bg="transparent",
-      pointsize=12, family="sans")
-  print(plot_grid(p1, p3, p2, labels="AUTO", ncol = 2))
-  dev.off()
-}
+
+i <- 8
+p1 <- ggplot(sp.dt) +
+  geom_sf(aes(fill = eval(as.name(events[i]))), color = "lightgrey", size = 0.00001) +
+  scale_fill_gradientn(
+    colors = c("#2166AC", "#F7F7F7", "#B2182B"), na.value = "gray80",
+    rescaler = ~ scales::rescale_mid(.x, mid = 0),
+    limits = c(-6, 6)) +
+  guides(fill = guide_colourbar(
+    position = "inside",
+    barheight = unit(1 , "in" ),
+    title = events.nm[i])) +
+  labs(x="", y="") +
+  theme(text = element_text(size=10),
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.justification.inside = c(0.9, 0.95),
+        legend.text=element_text(size=rel(0.8)),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.background = element_rect(fill="transparent"),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+p2 <- ggplot(sp.dt) +
+  geom_sf(aes(fill = eval(as.name(events[i+10]))), color = "lightgrey", size = 0.00001) +
+  scale_fill_gradientn(
+    colors = c("#2166AC", "#F7F7F7", "#B2182B"), na.value = "gray80",
+    rescaler = ~ scales::rescale_mid(.x, mid = 0),
+    limits = c(-6, 6)) +
+  guides(fill = guide_colourbar(
+    position = "inside",
+    barheight = unit(1 , "in" ),
+    title = events.nm[i+10])) +
+  labs(x="", y="") +
+  theme(text = element_text(size=10),
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.justification.inside = c(0.9, 0.95),
+        legend.text=element_text(size=rel(0.8)),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.background = element_rect(fill="transparent"),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+p3 <- ggplot(sp.dt) +
+  geom_sf(aes(fill = eval(as.name(events[i+20]))), color = "lightgrey", size = 0.00001) +
+  scale_fill_gradientn(
+    colors = c("#2166AC", "#F7F7F7", "#B2182B"), na.value = "gray80",
+    rescaler = ~ scales::rescale_mid(.x, mid = 0),
+    limits = c(-6, 6)) +
+  guides(fill = guide_colourbar(
+    position = "inside",
+    barheight = unit(1 , "in" ),
+    title = events.nm[i+20])) +
+  labs(x="", y="") +
+  theme(text = element_text(size=10),
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.justification.inside = c(0.9, 0.95),
+        legend.text=element_text(size=rel(0.8)),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.background = element_rect(fill="transparent"),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+
+
+tiff(file.path(indir1, "figures", "figure1_ct_complete_data_all_pm25_dif_0618.tiff"),
+     width=8.7,height=8.7,units="in", res = 500, bg="transparent",
+     pointsize=12, family="sans", compression = "zip")
+# png(file.path(indir1, "figures", paste0("figure1_ct_complete_data_all_pm25_dif_0618.png")),
+#     width=8.7, height=8.7,units="in", res = 600, bg="transparent",
+#     pointsize=12, family="sans")
+print(plot_grid(p1, p3, p2, labels="AUTO", ncol = 2))
+dev.off()
+
+
+
+i <- 2
+p1 <- ggplot(sp.dt) +
+  geom_sf(aes(fill = eval(as.name(events[i]))), color = "lightgrey", size = 0.00001) +
+  scale_fill_distiller(palette = "YlOrRd", na.value = "gray80", direction = 1,
+                       limits = c(0, 20)) +
+  guides(fill = guide_colourbar(
+    position = "inside",
+    barheight = unit(1 , "in" ),
+    title = events.nm[i])) +
+  labs(x="", y="") +
+  theme(text = element_text(size=8),
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.justification.inside = c(0.92, 0.95),
+        legend.text=element_text(size=rel(0.8)),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.background = element_rect(fill="transparent"),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+p2 <- ggplot(sp.dt) +
+  geom_sf(aes(fill = eval(as.name(events[i+10]))), color = "lightgrey", size = 0.00001) +
+  scale_fill_distiller(palette = "YlOrRd", na.value = "gray80", direction = 1,
+                       limits = c(0, 8)) +
+  guides(fill = guide_colourbar(
+    position = "inside",
+    barheight = unit(1 , "in" ),
+    title = events.nm[i+10])) +
+  labs(x="", y="") +
+  theme(text = element_text(size=8),
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.justification.inside = c(0.9, 0.95),
+        legend.text=element_text(size=rel(0.8)),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.background = element_rect(fill="transparent"),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+p3 <- ggplot(sp.dt) +
+  geom_sf(aes(fill = eval(as.name(events[i+20]))), color = "lightgrey", size = 0.00001) +
+  scale_fill_distiller(palette = "YlOrRd", na.value = "gray80", direction = 1,
+                       limits = c(0, 20)) +
+  guides(fill = guide_colourbar(
+    position = "inside",
+    barheight = unit(1 , "in" ),
+    title = events.nm[i+20])) +
+  labs(x="", y="") +
+  theme(text = element_text(size=8),
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.justification.inside = c(0.9, 0.95),
+        legend.text=element_text(size=rel(0.8)),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.background = element_rect(fill="transparent"),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+i <- 3
+p4 <- ggplot(sp.dt) +
+  geom_sf(aes(fill = eval(as.name(events[i]))), color = "lightgrey", size = 0.00001) +
+  scale_fill_distiller(palette = "YlOrRd", na.value = "gray80", direction = 1,
+                       limits = c(0, 20)) +
+  guides(fill = guide_colourbar(
+    position = "inside",
+    barheight = unit(1 , "in" ),
+    title = events.nm[i])) +
+  labs(x="", y="") +
+  theme(text = element_text(size=8),
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.justification.inside = c(0.92, 0.95),
+        legend.text=element_text(size=rel(0.8)),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.background = element_rect(fill="transparent"),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+p5 <- ggplot(sp.dt) +
+  geom_sf(aes(fill = eval(as.name(events[i+10]))), color = "lightgrey", size = 0.00001) +
+  scale_fill_distiller(palette = "YlOrRd", na.value = "gray80", direction = 1,
+                       limits = c(0, 8)) +
+  guides(fill = guide_colourbar(
+    position = "inside",
+    barheight = unit(1 , "in" ),
+    title = events.nm[i+10])) +
+  labs(x="", y="") +
+  theme(text = element_text(size=8),
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.justification.inside = c(0.9, 0.95),
+        legend.text=element_text(size=rel(0.8)),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.background = element_rect(fill="transparent"),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+p6 <- ggplot(sp.dt) +
+  geom_sf(aes(fill = eval(as.name(events[i+20]))), color = "lightgrey", size = 0.00001) +
+  scale_fill_distiller(palette = "YlOrRd", na.value = "gray80", direction = 1,
+                       limits = c(0, 20)) +
+  guides(fill = guide_colourbar(
+    position = "inside",
+    barheight = unit(1 , "in" ),
+    title = events.nm[i+20])) +
+  labs(x="", y="") +
+  theme(text = element_text(size=8),
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.justification.inside = c(0.9, 0.95),
+        legend.text=element_text(size=rel(0.8)),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.background = element_rect(fill="transparent"),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+
+
+tiff(file.path(indir1, "figures", "efigure2_ct_complete_data_all_pm25_06_18.tiff"),
+     width=10,height=8,units="in", res = 500, bg="transparent",
+     pointsize=10, family="sans", compression = "zip")
+# png(file.path(indir1, "figures", paste0("efigure2_ct_complete_data_all_pm25_06_18.png")),
+#     width=10,height=8,units="in", res = 600, bg="transparent",
+#     pointsize=10, family="sans")
+print(plot_grid(p1, p3, p2, p4, p6, p5, labels="AUTO", nrow = 2, byrow = T))
+dev.off()
 #######
 
-## Figure 3 and Figure 4
+## Figure 3 and Figure 4, and eTable 2
 #######
 total.wtavg <- fread(file.path(indir1, "results", 
                                "ct_indicator_wtavg.csv"))
@@ -483,53 +613,77 @@ nonwild.wtavg <- fread(file.path(indir1, "results",
 nonwild.wtavg <- nonwild.wtavg[5:17, ]
 nonwild.wtavg$year <- as.numeric(nonwild.wtavg$year)
 
-legend_colors_ses <- c("Unemployment"="#A6CEE3", "Poverty"="#1F78B4", "Low Income"="#B2DF8A", "Low College Educational Attainment"="#33A02C", "Low High School Enrollment"="#FB9A99")
-legend_colors_race <- c("White"="#1B9E77", "Black"="#D95F02", "Asian"="#7570B3", "Hispanic"="#E7298A", "Native American"="#66A61E", "Pacific Islander"="#E6AB02")
+## eTable 2
+loc.rm <- grep("_rel", names(total.wtavg))
+total.wtavg[, loc.rm] <- NULL
+total.wtavg$exposure <- "total pm2.5"
+foo <- total.wtavg
 
-## combined ses figure
+loc.rm <- grep("_rel", names(nonwild.wtavg))
+nonwild.wtavg[, loc.rm] <- NULL
+nonwild.wtavg$exposure <- "NWF pm2.5"
+foo <- rbind(foo, nonwild.wtavg)
+
+loc.rm <- grep("_rel", names(wild.wtavg))
+wild.wtavg[, loc.rm] <- NULL
+wild.wtavg$exposure <- "WF pm2.5"
+foo <- rbind(foo, wild.wtavg)
+write.csv(foo, file.path(indir1, "results", "etable2.csv"), row.names = FALSE)
+
+## arrange colors
+legend_colors_ses <- c("Unemployed - Employed"="#A6CEE3", 
+                       "Below - Above poverty"="#1F78B4", 
+                       "Lower - Higher Income"="#B2DF8A", 
+                       "W/O - With College Educational Attainment"="#33A02C", 
+                       "W/O - With High School Enrollment"="#FB9A99")
+legend_colors_race <- c("White"="#1B9E77", "Black"="#D95F02", "Asian"="#7570B3", 
+                        "Hispanic"="#E7298A", "Native American"="#66A61E", 
+                        "Pacific Islander"="#E6AB02")
+
+## combined ses figure, figure 3
 p1 <- ggplot(total.wtavg, aes(x=year)) +
   geom_hline(yintercept=0, linewidth=1) +
-  geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=1.5) +
-  geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=1.5) +
-  geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=1.5) +
-  geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=1.5) +
-  geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=1.5) +
+  geom_line(aes(y=employed_dif, color="Unemployed - Employed"), linewidth=1.5) +
+  geom_line(aes(y=abovepoverty_dif, color="Below - Above poverty"), linewidth=1.5) +
+  geom_line(aes(y=income_median_dif, color="Lower - Higher Income"), linewidth=1.5) +
+  geom_line(aes(y=bachelorsed_dif, color="W/O - With College Educational Attainment"), linewidth=1.5) +
+  geom_line(aes(y=highschoool_dif, color="W/O - With High School Enrollment"), linewidth=1.5) +
   xlab("") +
   ylab(expression(atop("Absolute difference in average", "total PM"[2.5]~"("~mu*"g/"*m^3~")"))) +
   labs(color="") +
   scale_color_manual(values=legend_colors_ses) +
   scale_x_continuous(breaks=seq(2006, 2018, 1)) +
   theme_bw() +
-  theme(text = element_text(size = 14), 
+  theme(text = element_text(size = 14),
         legend.position="none",
-        axis.title.y = element_text(vjust = +1), 
+        axis.title.y = element_text(vjust = +1),
         axis.text.x = element_text(angle = 45, hjust=1))
 
 p2 <- ggplot(wild.wtavg, aes(x=year)) +
-  geom_hline(yintercept=0, linewidth=1) + 
-  geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=1.5) +
-  geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=1.5) +
-  geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=1.5) +
-  geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=1.5) +
-  geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=1.5) +
+  geom_hline(yintercept=0, linewidth=1) +
+  geom_line(aes(y=employed_dif, color="Unemployed - Employed"), linewidth=1.5) +
+  geom_line(aes(y=abovepoverty_dif, color="Below - Above poverty"), linewidth=1.5) +
+  geom_line(aes(y=income_median_dif, color="Lower - Higher Income"), linewidth=1.5) +
+  geom_line(aes(y=bachelorsed_dif, color="W/O - With College Educational Attainment"), linewidth=1.5) +
+  geom_line(aes(y=highschoool_dif, color="W/O - With High School Enrollment"), linewidth=1.5) +
   xlab("") +
   ylab(expression(atop("Absolute difference in average","WF PM"[2.5]~"("~mu*"g/"*m^3~")"))) +
   labs(color="") +
   scale_color_manual(values=legend_colors_ses) +
   scale_x_continuous(breaks=seq(2006, 2018, 1)) +
   theme_bw() +
-  theme(text = element_text(size = 14), 
+  theme(text = element_text(size = 14),
         legend.position="none",
-        axis.title.y = element_text(vjust = +1), 
+        axis.title.y = element_text(vjust = +1),
         axis.text.x = element_text(angle = 45, hjust=1))
 
 p3 <- ggplot(nonwild.wtavg, aes(x=year)) +
-  geom_hline(yintercept=0, linewidth=1) + 
-  geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=1.5) +
-  geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=1.5) +
-  geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=1.5) +
-  geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=1.5) +
-  geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=1.5) +
+  geom_hline(yintercept=0, linewidth=1) +
+  geom_line(aes(y=employed_dif, color="Unemployed - Employed"), linewidth=1.5) +
+  geom_line(aes(y=abovepoverty_dif, color="Below - Above poverty"), linewidth=1.5) +
+  geom_line(aes(y=income_median_dif, color="Lower - Higher Income"), linewidth=1.5) +
+  geom_line(aes(y=bachelorsed_dif, color="W/O - With College Educational Attainment"), linewidth=1.5) +
+  geom_line(aes(y=highschoool_dif, color="W/O - With High School Enrollment"), linewidth=1.5) +
   xlab("") +
   ylab(expression(atop("Absolute difference in average", "NWF PM"[2.5]~"("~mu*"g/"*m^3~")"))) +
   labs(color="") +
@@ -538,35 +692,37 @@ p3 <- ggplot(nonwild.wtavg, aes(x=year)) +
   theme_bw() +
   theme(text = element_text(size = 14), legend.text = element_text(size = 14),
         legend.position="none",
-        axis.title.y = element_text(vjust = +1), 
+        axis.title.y = element_text(vjust = +1),
         axis.text.x = element_text(angle = 45, hjust=1))
 
-legend_p3 <- get_legend(
+legend_p3 <- get_plot_component(
   ggplot(nonwild.wtavg, aes(x=year)) +
-    geom_line(aes(y=employed_dif, color="Unemployment"), linewidth=1.5) +
-    geom_line(aes(y=abovepoverty_dif, color="Poverty"), linewidth=1.5) +
-    geom_line(aes(y=income_median_dif, color="Low Income"), linewidth=1.5) +
-    geom_line(aes(y=bachelorsed_dif, color="Low College Educational Attainment"), linewidth=1.5) +
-    geom_line(aes(y=highschoool_dif, color="Low High School Enrollment"), linewidth=1.5) +
+    geom_line(aes(y=employed_dif, color="Unemployed - Employed"), linewidth=1.5) +
+    geom_line(aes(y=abovepoverty_dif, color="Below - Above poverty"), linewidth=1.5) +
+    geom_line(aes(y=income_median_dif, color="Lower - Higher Income"), linewidth=1.5) +
+    geom_line(aes(y=bachelorsed_dif, color="W/O - With College Educational Attainment"), linewidth=1.5) +
+    geom_line(aes(y=highschoool_dif, color="W/O - With High School Enrollment"), linewidth=1.5) +
     scale_color_manual(values=legend_colors_ses) +
     scale_x_continuous(breaks=seq(2006, 2018, 1)) +
     labs(color="") +
     theme_bw() +
-    theme(text = element_text(size = 14), legend.text = element_text(size = 14),
+    theme(text = element_text(size = 14), legend.text = element_text(size = 12),
           legend.position="right",
-          axis.title.y = element_text(vjust = +1), 
-          axis.text.x = element_text(angle = 45, hjust=1))
-)
+          axis.title.y = element_text(vjust = +1),
+          axis.text.x = element_text(angle = 45, hjust=1)), "guide-box", return_all = TRUE)[[3]]
 
-png(filename = file.path(indir1, "figures/combined_wtavg_ses.png"),
-    width=8, height=8, units="in", res = 600, bg="white",
-    pointsize=12, family="sans")
+tiff(file.path(indir1, "figures/figure3_combined_wtavg_ses.tiff"),
+     width=8,height=8,units="in", res = 500, bg="transparent",
+     pointsize=12, family="sans", compression = "zip")
+# png(filename = file.path(indir1, "figures/figure3_combined_wtavg_ses.png"),
+#     width=8, height=8, units="in", res = 600, bg="white",
+#     pointsize=12, family="sans")
 p_up <- plot_grid(p1, p3, labels="AUTO", nrow = 1)
 p_bottom <- plot_grid(p2, legend_p3, labels=c("C", ""), nrow = 1, rel_widths = c(1, 1))
 plot_grid(p_up, p_bottom, nrow=2)
 dev.off()
 
-## combined race/ethnicity figure
+## combined race/ethnicity figure, figure 4
 p4 <- ggplot(total.wtavg, aes(x=year)) +
   geom_hline(yintercept=0, linewidth=1) +
   geom_line(aes(y=white_pct_dif, color="White"), linewidth=1.5) +
@@ -624,7 +780,7 @@ p6 <- ggplot(nonwild.wtavg, aes(x=year)) +
         axis.title.y = element_text(vjust = +1), 
         axis.text.x = element_text(angle = 45, hjust=1))
 
-legend_p6 <- get_legend(
+legend_p6 <- get_plot_component(
   ggplot(nonwild.wtavg, aes(x=year)) +
     geom_line(aes(y=white_pct_dif, color="White"), linewidth=1.5) +
     geom_line(aes(y=black_pct_dif, color="Black"), linewidth=1.5) +
@@ -639,13 +795,14 @@ legend_p6 <- get_legend(
     theme(text = element_text(size = 14), legend.text = element_text(size = 14),
           legend.position="right",
           axis.title.y = element_text(vjust = +1), 
-          axis.text.x = element_text(angle = 45, hjust=1))
-)
+          axis.text.x = element_text(angle = 45, hjust=1)), "guide-box", return_all = TRUE)[[3]]
 
-
-png(filename = file.path(indir1, "figures/combined_wtavg_race.png"),
-    width=8, height=8, units="in", res = 600, bg="white",
-    pointsize=12, family="sans")
+tiff(file.path(indir1, "figures/figure4_combined_wtavg_race.tiff"),
+     width=8,height=8,units="in", res = 550, bg="transparent",
+     pointsize=12, family="sans", compression = "zip")
+# png(filename = file.path(indir1, "figures/figure4_combined_wtavg_race.png"),
+#     width=8, height=8, units="in", res = 600, bg="white",
+#     pointsize=12, family="sans")
 p_uprace <- plot_grid(p4, p6, labels="AUTO", nrow = 1)
 p_bottomrace <- plot_grid(p5, legend_p6, labels=c("C", ""), nrow = 1, rel_widths = c(1, 1))
 plot_grid(p_uprace, p_bottomrace, nrow=2)
@@ -656,34 +813,31 @@ dev.off()
 #######
 temp <- pm.all.com[pm.all.com$year %in% c(2006:2018),]
 
-png(file.path(indir1, "figures", paste0("ct_complete_data_Average_total_pm25_by_year.png")),
-      width=6,height=4,units="in", res = 600, bg="transparent",
-      pointsize=12, family="sans")
-ggplot(temp, aes(x=year, y=pm25_avg)) + 
+p1 <- ggplot(temp, aes(x=year, y=pm25_avg)) + 
   geom_boxplot() +
   labs(
     x="Year", y=expression("Average total PM"[2.5]~"("~mu*"g/"*m^3~")")) +
   theme_bw() +
-  theme(text = element_text(size=12), plot.title = element_text(hjust = 0.5))
-dev.off()
+  theme(text = element_text(size=9), plot.title = element_text(hjust = 0.5))
 
-png(file.path(indir1, "figures", paste0("ct_complete_data_Average_wildfire_pm25_by_year.png")),
-      width=6,height=4,units="in", res = 600, bg="transparent",
-      pointsize=12, family="sans")
-ggplot(temp, aes(x=year, y=pm25wf_avg)) + 
+p2 <- ggplot(temp, aes(x=year, y=pm25wf_avg)) + 
   geom_boxplot() +
   labs(x="Year", y=expression("Average wildfire PM"[2.5]~"("~mu*"g/"*m^3~")")) +
   theme_bw() +
-  theme(text = element_text(size=12), plot.title = element_text(hjust = 0.5))
-dev.off()
+  theme(text = element_text(size=9), plot.title = element_text(hjust = 0.5))
 
-png(file.path(indir1, "figures", paste0("ct_complete_data_Average_non-wf_pm25_by_year.png")),
-      width=6,height=4,units="in", res = 600, bg="transparent",
-      pointsize=12, family="sans")
-ggplot(temp, aes(x=year, y=pm25_nowf)) + 
+p3 <- ggplot(temp, aes(x=year, y=pm25_nowf)) + 
   geom_boxplot() +
   labs(x="Year", y=expression("Average non-wildfire PM"[2.5]~"("~mu*"g/"*m^3~")")) +
   theme_bw() +
-  theme(text = element_text(size=12), plot.title = element_text(hjust = 0.5))
+  theme(text = element_text(size=9), plot.title = element_text(hjust = 0.5))
+
+tiff(file.path(indir1, "figures/efigure1_ct_complete_data_Average_all_pm25_by_year.png.tiff"),
+     width=8,height=6, units="in", res = 500, bg="transparent",
+     pointsize=12, family="sans", compression = "zip")
+# png(file.path(indir1, "figures", paste0("efigure1_ct_complete_data_Average_all_pm25_by_year.png")),
+#     width=8,height=6,units="in", res = 600, bg="transparent",
+#     pointsize=12, family="sans")
+print(plot_grid(p1, p3, p2, labels="AUTO", ncol = 2))
 dev.off()
 #######
