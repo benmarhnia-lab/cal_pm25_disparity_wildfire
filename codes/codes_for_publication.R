@@ -390,7 +390,7 @@ p1 <- ggplot(sp.dt) +
   theme(text = element_text(size=10),
         legend.background = element_blank(),
         legend.box.background = element_blank(),
-        legend.justification.inside = c(0.9, 0.95),
+        legend.justification.inside = c(0.92, 0.95),
         legend.text=element_text(size=rel(0.8)),
         axis.ticks = element_blank(),
         axis.text.x = element_blank(),
@@ -413,7 +413,7 @@ p2 <- ggplot(sp.dt) +
   theme(text = element_text(size=10),
         legend.background = element_blank(),
         legend.box.background = element_blank(),
-        legend.justification.inside = c(0.9, 0.95),
+        legend.justification.inside = c(0.92, 0.95),
         legend.text=element_text(size=rel(0.8)),
         axis.ticks = element_blank(),
         axis.text.x = element_blank(),
@@ -436,7 +436,7 @@ p3 <- ggplot(sp.dt) +
   theme(text = element_text(size=10),
         legend.background = element_blank(),
         legend.box.background = element_blank(),
-        legend.justification.inside = c(0.9, 0.95),
+        legend.justification.inside = c(0.92, 0.95),
         legend.text=element_text(size=rel(0.8)),
         axis.ticks = element_blank(),
         axis.text.x = element_blank(),
@@ -448,10 +448,10 @@ p3 <- ggplot(sp.dt) +
 
 
 tiff(file.path(indir1, "figures", "figureS2_ct_complete_data_all_pm25_dif_0618.tiff"),
-     width=8.7,height=8.7,units="in", res = 500, bg="transparent",
+     width=7.5,height=8.7,units="in", res = 500, bg="transparent",
      pointsize=12, family="sans", compression = "zip")
 # png(file.path(indir1, "figures", paste0("figureS2_ct_complete_data_all_pm25_dif_0618.png")),
-#     width=8.7, height=8.7,units="in", res = 600, bg="transparent",
+#     width=7.5, height=8.7,units="in", res = 600, bg="transparent",
 #     pointsize=12, family="sans")
 print(plot_grid(p1, p3, p2, labels="AUTO", ncol = 2))
 dev.off()
@@ -615,7 +615,7 @@ p1 <- ggplot(sp.dt) +
   theme(text = element_text(size=10),
         legend.background = element_blank(),
         legend.box.background = element_blank(),
-        legend.justification.inside = c(0.9, 0.95),
+        legend.justification.inside = c(0.92, 0.95),
         legend.text=element_text(size=rel(0.8)),
         axis.ticks = element_blank(),
         axis.text.x = element_blank(),
@@ -636,7 +636,7 @@ p2 <- ggplot(sp.dt) +
   theme(text = element_text(size=10),
         legend.background = element_blank(),
         legend.box.background = element_blank(),
-        legend.justification.inside = c(0.9, 0.95),
+        legend.justification.inside = c(0.92, 0.95),
         legend.text=element_text(size=rel(0.8)),
         axis.ticks = element_blank(),
         axis.text.x = element_blank(),
@@ -657,7 +657,7 @@ p3 <- ggplot(sp.dt) +
   theme(text = element_text(size=10),
         legend.background = element_blank(),
         legend.box.background = element_blank(),
-        legend.justification.inside = c(0.9, 0.95),
+        legend.justification.inside = c(0.92, 0.95),
         legend.text=element_text(size=rel(0.8)),
         axis.ticks = element_blank(),
         axis.text.x = element_blank(),
@@ -669,7 +669,7 @@ p3 <- ggplot(sp.dt) +
 
 
 tiff(file.path(indir1, "figures", "fiugre1_ct_complete_data_all_pm25_avg_0618.tiff"),
-     width=8.7,height=8.7,units="in", res = 500, bg="transparent",
+     width=7.5,height=8.7,units="in", res = 500, bg="transparent",
      pointsize=12, family="sans", compression = "zip")
 # png(file.path(indir1, "figures", paste0("figure1_ct_complete_data_all_pm25_avg_0618.png")),
 #     width=8.7, height=8.7,units="in", res = 600, bg="transparent",
@@ -796,7 +796,7 @@ legend_p3 <- get_plot_component(
           axis.text.x = element_text(angle = 45, hjust=1)), "guide-box", return_all = TRUE)[[1]]
 
 tiff(file.path(indir1, "figures/figure3_combined_wtavg_ses.tiff"),
-     width=8,height=8,units="in", res = 500, bg="transparent",
+     width=7.5,height=8,units="in", res = 500, bg="transparent",
      pointsize=12, family="sans", compression = "zip")
 # png(filename = file.path(indir1, "figures/figure3_combined_wtavg_ses.png"),
 #     width=8, height=8, units="in", res = 600, bg="white",
@@ -882,7 +882,7 @@ legend_p6 <- get_plot_component(
           axis.text.x = element_text(angle = 45, hjust=1)), "guide-box", return_all = TRUE)[[1]]
 
 tiff(file.path(indir1, "figures/figure4_combined_wtavg_race.tiff"),
-     width=8,height=8,units="in", res = 550, bg="transparent",
+     width=7.5,height=8,units="in", res = 550, bg="transparent",
      pointsize=12, family="sans", compression = "zip")
 # png(filename = file.path(indir1, "figures/figure4_combined_wtavg_race.png"),
 #     width=8, height=8, units="in", res = 600, bg="white",
